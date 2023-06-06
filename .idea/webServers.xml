@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="2daa9373-2881-41d2-823b-2db329ec99b4" name="openstack" url="http://192.168.68.150">
+        <fileTransfer rootFolder="/code/goDemo2" accessType="SFTP" host="192.168.68.150" port="22" sshConfigId="f2280bd3-5519-408e-936d-1fcc7ac86ede" sshConfig="openstack">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="9a60913b-f51b-40fa-83e7-e0a09b57ac3f" name="libvirt" url="http://10.254.10.58">
+        <fileTransfer rootFolder="/code/goDemo1" accessType="SFTP" host="10.254.10.58" port="22" sshConfigId="8562f232-7887-4f5d-858c-9e1dc1fbe054" sshConfig="libvirt">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

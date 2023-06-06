@@ -1,0 +1,39 @@
+{
+  "http": {
+    "Addr": "0.0.0.0:1234",
+    "run_mode": "debug"
+  },
+  "log": {
+    "LogDir": "/var/log/zzcopenstack/",
+    "LogFile": "goku",
+    "LogFileExt": "log",
+    "TimeFormat": "200601"
+  },
+  "userList": {
+    "admin":{
+      "userId": "6720aab6",
+      "userName": "admin",
+      "gender": "男",
+      "userMobile": "19101716179",
+      "pwd": "123456",
+      "permission": ["admin"]
+    },
+    "normal":{
+      "userId": "6720aab7",
+      "userName": "normal",
+      "gender": "男",
+      "userMobile": "19101716179",
+      "pwd": "123456",
+      "permission": [
+        "normal",
+        "ServerList"
+        ]
+    }
+  },
+  "netbox": {
+    "onoff": true,
+    "host": "1.1.1.1:80",
+    "token": "123456",
+    "path": "netbox/api"
+  } 
+}
