@@ -129,6 +129,9 @@ func (*InstanceResource) ServerList(c *gin.Context) {
 			for _, cName := range clusters {
 				client := cli.DB("openstack").C(cName + date)
 				cErr := client.Find(bson.M{"host": HostName}).All(&servers)
+				if len(servers) == 0 {
+					continue
+				}
 				if cErr == nil {
 					resp.Render(c, 200, ResponseServersData{Projects: projects, Clusters: clusters, Servers: servers}, nil)
 					return
