@@ -166,19 +166,6 @@ func (*InstanceResource) ServerList(c *gin.Context) {
 			resp.Render(c, 200, ResponseServersData{Projects: projects, Clusters: clusters, Servers: servers}, nil)
 			return
 		}
-		if len(HostName) != 0 {
-			for _, cName := range clusters {
-				client := cli.DB("openstack").C(cName + date)
-				cErr := client.Find(bson.M{"host": HostName}).All(&servers)
-				if cErr == nil {
-					resp.Render(c, 200, ResponseServersData{Projects: projects, Clusters: clusters, Servers: servers}, nil)
-					return
-				} else {
-					resp.Render(c, 200, nil, errors.New("获取数据失败"))
-					return
-				}
-			}
-		}
 		if len(clusterName) != 0 {
 			client := cli.DB("openstack").C(clusterName)
 			if len(projectName) != 0 {
