@@ -18,7 +18,9 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 	"github.com/gophercloud/gophercloud/pagination"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -39,6 +41,12 @@ type Port struct {
 	DeviceID    string `json:"device_id" bson:"device_id"`
 }
 
+type Subnet struct {
+	ClusterName     string                   `json:"cluster_name" bson:"cluster_name"`
+	ID              string                   `json:"id" bson:"id"`
+	Name            string                   `json:"name" bson:"name"`
+	AllocationPools []subnets.AllocationPool `json:"allocationPools"  bson:"allocationPools"`
+}
 type sync interface {
 	SyncData()
 	Auth()
@@ -94,6 +102,7 @@ func Do(ClusterList []component.AuthInfo) {
 	defer cli.Close()
 	_, err = cli.DB("openstack").C("project").RemoveAll(nil)
 	_, err = cli.DB("openstack").C("port").RemoveAll(nil)
+	_, err = cli.DB("openstack").C("subnet").RemoveAll(nil)
 	if err != nil {
 		logging.Error("清空集合失败 Err:", err)
 	}
@@ -191,6 +200,7 @@ func (o *OpenStack) SyncDataToMongo(cli *mgo.Session) {
 	port := Port{}
 	portList := ListPort(provider)
 	portClient := cli.DB("openstack").C("port")
+
 	for _, p := range portList {
 		port = Port{
 			ClusterName: o.ClusterName,
@@ -204,6 +214,23 @@ func (o *OpenStack) SyncDataToMongo(cli *mgo.Session) {
 			port.IP = p.FixedIPs[0].IPAddress
 		}
 		cErr := portClient.Insert(port)
+		if cErr != nil {
+			logging.Error("insert mongo error:", cErr)
+		}
+	}
+
+	//获取ALL Subnets
+	subnet := Subnet{}
+	subnetList := ListSubnet(provider)
+	subnetClient := cli.DB("openstack").C("subnet")
+	for _, n := range subnetList {
+		subnet = Subnet{
+			ClusterName:     o.ClusterName,
+			ID:              n.ID,
+			Name:            n.Name,
+			AllocationPools: n.AllocationPools,
+		}
+		cErr := subnetClient.Insert(subnet)
 		if cErr != nil {
 			logging.Error("insert mongo error:", cErr)
 		}
@@ -437,6 +464,38 @@ func GetVolumesSize(provider *gophercloud.ProviderClient, Volumes []servers.Atta
 		}
 	}
 	return
+}
+
+func ListSubnet(provider *gophercloud.ProviderClient) (Subnets []subnets.Subnet) {
+	method := "ListNetwork"
+	client, err := openstack.NewNetworkV2(provider, gophercloud.EndpointOpts{
+		Region: "RegionOne",
+	})
+	if err != nil {
+		logging.Error(method, ":", err)
+		return
+	}
+	//获取网络list
+	var Networks []networks.Network
+	pager := networks.List(client, networks.ListOpts{})
+	err = pager.EachPage(func(page pagination.Page) (bool, error) {
+		networkList, _ := networks.ExtractNetworks(page)
+		Networks = networkList
+		return true, nil
+	})
+	//获取subnets
+	for _, n := range Networks {
+		opts := subnets.ListOpts{NetworkID: n.ID}
+		pager := subnets.List(client, opts)
+		err = pager.EachPage(func(page pagination.Page) (bool, error) {
+			subnetList, _ := subnets.ExtractSubnets(page)
+			Subnets = append(Subnets, subnetList...)
+			return true, nil
+		})
+
+	}
+	return Subnets
+
 }
 
 // 获取vncConsole
